@@ -1,21 +1,19 @@
-use rand::{thread_rng, Rng};
+use rand::{seq::SliceRandom, thread_rng};
+use std::convert::TryInto;
 
-/** 数が正しいかどうか */
-fn is_valid_digits(digits: &str) -> bool {
-    if digits.len() != 4 {
-        return false;
-    }
+type Digits = [u8; 4];
 
-    if digits.chars().any(|x| !x.is_numeric()) {
-        return false;
-    }
-
-    let mut pre: Vec<u8> = Vec::new();
-    for c in digits.bytes() {
-        if pre.contains(&c) {
+/** 数の組が正しいかどうか */
+pub fn is_valid_digits(digits: Digits) -> bool {
+    for (i, n) in digits.iter().enumerate() {
+        if *n > 9 {
             return false;
         }
-        pre.push(c);
+
+        // 重複チェック
+        if digits[i + 1..].contains(n) {
+            return false;
+        }
     }
 
     true
@@ -26,39 +24,30 @@ mod is_valid_digits_test {
     use crate::is_valid_digits;
 
     #[test]
-    fn 引数が4文字以外なら_false() {
-        assert!(!is_valid_digits("123"));
-        assert!(!is_valid_digits("12345"));
-    }
-
-    #[test]
-    fn 数字以外が混ざっていたら_false() {
-        assert!(!is_valid_digits("123a"));
-        assert!(!is_valid_digits("12a3"));
+    fn 二桁以上の数字があったら_false() {
+        assert!(!is_valid_digits([1, 2, 3, 10]));
     }
 
     #[test]
     fn 重複があったら_false() {
-        assert!(!is_valid_digits("1123"));
-        assert!(!is_valid_digits("1233"));
+        assert!(!is_valid_digits([1, 1, 2, 3]));
+        assert!(!is_valid_digits([1, 2, 3, 3]));
     }
 
     #[test]
     fn 正常系() {
-        assert!(is_valid_digits("1234"));
-        assert!(is_valid_digits("2468"));
+        assert!(is_valid_digits([1, 2, 3, 4]));
+        assert!(is_valid_digits([2, 4, 6, 8]));
     }
 }
 
-fn generate_digits() -> String {
-    let mut digits = String::new();
+/** 数の組を生成 */
+pub fn generate_digits() -> Digits {
+    let mut v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let mut rng = thread_rng();
+    v.shuffle(&mut rng);
 
-    for n in 0..10 {
-        let idx = thread_rng().gen_range(0..=n);
-        digits.insert_str(idx, &n.to_string());
-    }
-
-    (digits[0..4]).to_string()
+    v[0..4].try_into().unwrap()
 }
 
 #[cfg(test)]
@@ -69,7 +58,7 @@ mod generate_digits {
     fn ループして異常な値がないことを確認() {
         for _ in 0..50 {
             let digits = generate_digits();
-            assert!(is_valid_digits(&digits), "{}", digits)
+            assert!(is_valid_digits(digits))
         }
     }
 
@@ -80,10 +69,8 @@ mod generate_digits {
         for _ in 0..2500 {
             let digits = generate_digits();
 
-            for c in digits.chars() {
-                if let Ok(idx) = c.to_string().parse::<usize>() {
-                    counts[idx] += 1;
-                }
+            for n in digits.iter() {
+                counts[*n as usize] += 1;
             }
         }
 
