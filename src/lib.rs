@@ -4,19 +4,19 @@ use std::convert::TryInto;
 type Digits = [u8; 4];
 
 /** 数の組が正しいかどうか */
-pub fn is_valid_digits(digits: Digits) -> bool {
+pub fn is_valid_digits(digits: Digits) -> Result<(), &'static str> {
     for (i, n) in digits.iter().enumerate() {
         if *n > 9 {
-            return false;
+            return Err("greater then 9");
         }
 
         // 重複チェック
         if digits[i + 1..].contains(n) {
-            return false;
+            return Err("duplicated");
         }
     }
 
-    true
+    Ok(())
 }
 
 #[cfg(test)]
@@ -24,20 +24,20 @@ mod is_valid_digits_test {
     use crate::is_valid_digits;
 
     #[test]
-    fn 二桁以上の数字があったら_false() {
-        assert!(!is_valid_digits([1, 2, 3, 10]));
+    fn 二桁以上の数字があったらエラー() {
+        assert!(is_valid_digits([1, 2, 3, 10]).is_err());
     }
 
     #[test]
-    fn 重複があったら_false() {
-        assert!(!is_valid_digits([1, 1, 2, 3]));
-        assert!(!is_valid_digits([1, 2, 3, 3]));
+    fn 重複があったらエラー() {
+        assert!(is_valid_digits([1, 1, 2, 3]).is_err());
+        assert!(is_valid_digits([1, 2, 3, 3]).is_err());
     }
 
     #[test]
     fn 正常系() {
-        assert!(is_valid_digits([1, 2, 3, 4]));
-        assert!(is_valid_digits([2, 4, 6, 8]));
+        assert!(is_valid_digits([1, 2, 3, 4]).is_ok());
+        assert!(is_valid_digits([2, 4, 6, 8]).is_ok());
     }
 }
 
@@ -51,14 +51,14 @@ pub fn generate_digits() -> Digits {
 }
 
 #[cfg(test)]
-mod generate_digits {
+mod generate_digits_test {
     use super::*;
 
     #[test]
     fn ループして異常な値がないことを確認() {
         for _ in 0..50 {
             let digits = generate_digits();
-            assert!(is_valid_digits(digits))
+            assert!(is_valid_digits(digits).is_ok())
         }
     }
 
