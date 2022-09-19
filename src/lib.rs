@@ -1,3 +1,5 @@
+use rand::{thread_rng, Rng};
+
 /** 数が正しいかどうか */
 fn is_valid_digits(digits: &str) -> bool {
     if digits.len() != 4 {
@@ -45,5 +47,48 @@ mod is_valid_digits_test {
     fn 正常系() {
         assert!(is_valid_digits("1234"));
         assert!(is_valid_digits("2468"));
+    }
+}
+
+fn generate_digits() -> String {
+    let mut digits = String::new();
+
+    for n in 0..10 {
+        let idx = thread_rng().gen_range(0..=n);
+        digits.insert_str(idx, &n.to_string());
+    }
+
+    (digits[0..4]).to_string()
+}
+
+#[cfg(test)]
+mod generate_digits {
+    use super::*;
+
+    #[test]
+    fn ループして異常な値がないことを確認() {
+        for _ in 0..50 {
+            let digits = generate_digits();
+            assert!(is_valid_digits(&digits), "{}", digits)
+        }
+    }
+
+    #[test]
+    fn ループして各数字が均等に現れることを確認() {
+        let mut counts: Vec<u16> = vec![0; 10];
+
+        for _ in 0..2500 {
+            let digits = generate_digits();
+
+            for c in digits.chars() {
+                if let Ok(idx) = c.to_string().parse::<usize>() {
+                    counts[idx] += 1;
+                }
+            }
+        }
+
+        for n in counts {
+            assert!(900 < n && n < 1100, "{}", n);
+        }
     }
 }
