@@ -7,3 +7,12 @@
 3. `cargo init` 実行
 4. .vscode 追加
     - settings.json にフォーマット関連
+
+## 実行
+```shell
+# 初回インストール
+$ cargo install cargo-watch
+
+# ソースに変更があるたびにビルド+実行（毎回コンソールをクリア）
+cargo watch -x run --clear
+```
