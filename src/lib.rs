@@ -1,7 +1,8 @@
 use rand::{seq::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
-type Digits = [u8; 4];
+const DIGITS_SIZE: usize = 4;
+type Digits = [u8; DIGITS_SIZE];
 
 /** 数の組が正しいかどうか */
 pub fn is_valid_digits(digits: Digits) -> Result<(), &'static str> {
@@ -47,7 +48,7 @@ pub fn generate_digits() -> Digits {
     let mut rng = thread_rng();
     v.shuffle(&mut rng);
 
-    v[0..4].try_into().unwrap()
+    v[0..DIGITS_SIZE].try_into().unwrap()
 }
 
 #[cfg(test)]
@@ -77,5 +78,54 @@ mod generate_digits_test {
         for n in counts {
             assert!(900 < n && n < 1100, "{}", n);
         }
+    }
+}
+
+pub fn make_digits_from_str(str: &str) -> Result<Digits, &'static str> {
+    if str.len() > DIGITS_SIZE {
+        return Err("too long");
+    }
+    if str.len() < DIGITS_SIZE {
+        return Err("too short");
+    }
+
+    let mut v: Vec<u8> = vec![];
+
+    for c in str.chars() {
+        if !c.is_numeric() {
+            return Err("includes non-numeric character");
+        }
+
+        v.push(c.to_string().parse().unwrap())
+    }
+
+    v.try_into().map_err(|_| "unexcepted error")
+}
+
+#[cfg(test)]
+mod make_digits_from_str_test {
+    use crate::make_digits_from_str;
+
+    #[test]
+    fn 入力の長さが不正ならエラー() {
+        assert!(make_digits_from_str("123").is_err());
+        assert!(make_digits_from_str("12345").is_err());
+    }
+
+    #[test]
+    fn 数字以外が混ざっていたらエラー() {
+        assert!(make_digits_from_str("123a").is_err());
+        assert!(make_digits_from_str("12a3").is_err());
+    }
+
+    #[test]
+    fn 正常系() {
+        assert!(make_digits_from_str("1234").is_ok());
+        assert!(make_digits_from_str("2468").is_ok());
+        assert_eq!(make_digits_from_str("1234").unwrap(), [1, 2, 3, 4]);
+        assert_eq!(make_digits_from_str("2468").unwrap(), [2, 4, 6, 8]);
+
+        // 重複は許容
+        assert!(make_digits_from_str("1111").is_ok());
     }
 }
