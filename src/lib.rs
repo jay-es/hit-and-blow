@@ -11,14 +11,14 @@ impl Digits {
     const SIZE: usize = 4;
 
     /** 数の配列が正しいかどうか */
-    fn is_valid(digits: DigitArray) -> Result<(), &'static str> {
-        for (i, n) in digits.iter().enumerate() {
+    fn is_valid(value: DigitArray) -> Result<(), &'static str> {
+        for (i, n) in value.iter().enumerate() {
             if *n > 9 {
                 return Err("greater then 9");
             }
 
             // 重複チェック
-            if digits[i + 1..].contains(n) {
+            if value[i + 1..].contains(n) {
                 return Err("duplicated");
             }
         }
@@ -32,12 +32,12 @@ impl Digits {
         let mut rng = thread_rng();
         v.shuffle(&mut rng);
 
-        let digits = v[0..Digits::SIZE].try_into().unwrap();
-        Digits { value: digits }
+        let value: DigitArray = v[0..Digits::SIZE].try_into().unwrap();
+        Digits { value }
     }
 
-    fn new(digits: DigitArray) -> Result<Digits, &'static str> {
-        Digits::is_valid(digits).map(|_| Digits { value: digits })
+    fn new(value: DigitArray) -> Result<Digits, &'static str> {
+        Digits::is_valid(value).map(|_| Digits { value })
     }
 
     /** 文字列からインスタンスを生成 */
@@ -109,7 +109,7 @@ mod is_valid_test {
 
 #[cfg(test)]
 mod generate_random_test {
-    use super::*;
+    use crate::Digits;
 
     #[test]
     fn ループして異常な値がないことを確認() {
