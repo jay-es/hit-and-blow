@@ -61,6 +61,28 @@ impl Digits {
 
         Digits::new(v.try_into().unwrap())
     }
+
+    /** 比較 */
+    pub fn compare(&self, other: &Self) -> (u8, u8, bool) {
+        let mut hit: u8 = 0;
+        let mut blow: u8 = 0;
+
+        for (i, n) in self.value.iter().enumerate() {
+            // 含まれていなければスキップ
+            if !other.value.contains(n) {
+                continue;
+            }
+
+            // インデックスが同じなら hit
+            if other.value[i] == *n {
+                hit += 1;
+            } else {
+                blow += 1;
+            }
+        }
+
+        (hit, blow, hit == Digits::SIZE as u8)
+    }
 }
 
 #[cfg(test)]
@@ -143,5 +165,48 @@ mod new_from_str_test {
         assert!(Digits::new_from_str("2468").is_ok());
         assert_eq!(Digits::new_from_str("1234").unwrap().value, [1, 2, 3, 4]);
         assert_eq!(Digits::new_from_str("2468").unwrap().value, [2, 4, 6, 8]);
+    }
+}
+
+#[cfg(test)]
+mod compare_test {
+    use crate::Digits;
+
+    #[test]
+    fn 全部はずれ() {
+        let a = Digits::new([1, 2, 3, 4]).unwrap();
+        let b = Digits::new([5, 6, 7, 8]).unwrap();
+        assert_eq!(a.compare(&b), (0, 0, false));
+        assert_eq!(b.compare(&a), (0, 0, false));
+    }
+
+    #[test]
+    fn blowあり() {
+        let a = Digits::new([1, 2, 3, 4]).unwrap();
+        let b = Digits::new([4, 6, 7, 8]).unwrap();
+        assert_eq!(a.compare(&b), (0, 1, false));
+        assert_eq!(b.compare(&a), (0, 1, false));
+
+        let c = Digits::new([4, 6, 7, 3]).unwrap();
+        assert_eq!(a.compare(&c), (0, 2, false));
+    }
+
+    #[test]
+    fn hitあり() {
+        let a = Digits::new([1, 2, 3, 4]).unwrap();
+        let b = Digits::new([1, 6, 7, 8]).unwrap();
+        assert_eq!(a.compare(&b), (1, 0, false));
+        assert_eq!(b.compare(&a), (1, 0, false));
+
+        let c = Digits::new([4, 2, 7, 3]).unwrap();
+        assert_eq!(a.compare(&c), (1, 2, false));
+    }
+
+    #[test]
+    fn 全部あたり() {
+        let a = Digits::new([1, 2, 3, 4]).unwrap();
+        let b = Digits::new([1, 2, 3, 4]).unwrap();
+        assert_eq!(a.compare(&b), (4, 0, true));
+        assert_eq!(b.compare(&a), (4, 0, true));
     }
 }
