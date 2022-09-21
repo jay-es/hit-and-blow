@@ -1,5 +1,6 @@
 use rand::{seq::SliceRandom, thread_rng};
 use std::convert::TryInto;
+use std::fmt;
 
 #[derive(PartialEq, Eq)]
 pub enum CompareResult {
@@ -92,6 +93,13 @@ impl Digits {
         } else {
             CompareResult::Diff { hit, blow }
         }
+    }
+}
+
+// default formatter
+impl fmt::Display for Digits {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.value.map(|v| v.to_string()).join(""))
     }
 }
 
@@ -218,5 +226,16 @@ mod compare_test {
         let b = Digits::new([1, 2, 3, 4]).unwrap();
         assert!(a.compare(&b) == CompareResult::Same);
         assert!(b.compare(&a) == CompareResult::Same);
+    }
+}
+
+#[cfg(test)]
+mod fmt_test {
+    use crate::Digits;
+
+    #[test]
+    fn format() {
+        let digits = Digits::new([1, 2, 3, 4]).unwrap();
+        assert_eq!(format!("{}", digits), "1234");
     }
 }
