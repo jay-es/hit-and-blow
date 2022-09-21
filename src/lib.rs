@@ -1,6 +1,12 @@
 use rand::{seq::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
+#[derive(PartialEq, Eq)]
+pub enum CompareResult {
+    Same,
+    Diff { hit: u8, blow: u8 },
+}
+
 type DigitArray = [u8; Digits::SIZE];
 
 pub struct Digits {
@@ -63,7 +69,7 @@ impl Digits {
     }
 
     /** 比較 */
-    pub fn compare(&self, other: &Self) -> (u8, u8, bool) {
+    pub fn compare(&self, other: &Self) -> CompareResult {
         let mut hit: u8 = 0;
         let mut blow: u8 = 0;
 
@@ -81,7 +87,11 @@ impl Digits {
             }
         }
 
-        (hit, blow, hit == Digits::SIZE as u8)
+        if hit == Digits::SIZE as u8 {
+            CompareResult::Same
+        } else {
+            CompareResult::Diff { hit, blow }
+        }
     }
 }
 
@@ -170,43 +180,43 @@ mod new_from_str_test {
 
 #[cfg(test)]
 mod compare_test {
-    use crate::Digits;
+    use crate::{CompareResult, Digits};
 
     #[test]
     fn 全部はずれ() {
         let a = Digits::new([1, 2, 3, 4]).unwrap();
         let b = Digits::new([5, 6, 7, 8]).unwrap();
-        assert_eq!(a.compare(&b), (0, 0, false));
-        assert_eq!(b.compare(&a), (0, 0, false));
+        assert!(a.compare(&b) == CompareResult::Diff { hit: 0, blow: 0 });
+        assert!(b.compare(&a) == CompareResult::Diff { hit: 0, blow: 0 });
     }
 
     #[test]
     fn blowあり() {
         let a = Digits::new([1, 2, 3, 4]).unwrap();
         let b = Digits::new([4, 6, 7, 8]).unwrap();
-        assert_eq!(a.compare(&b), (0, 1, false));
-        assert_eq!(b.compare(&a), (0, 1, false));
+        assert!(a.compare(&b) == CompareResult::Diff { hit: 0, blow: 1 });
+        assert!(b.compare(&a) == CompareResult::Diff { hit: 0, blow: 1 });
 
         let c = Digits::new([4, 6, 7, 3]).unwrap();
-        assert_eq!(a.compare(&c), (0, 2, false));
+        assert!(a.compare(&c) == CompareResult::Diff { hit: 0, blow: 2 });
     }
 
     #[test]
     fn hitあり() {
         let a = Digits::new([1, 2, 3, 4]).unwrap();
         let b = Digits::new([1, 6, 7, 8]).unwrap();
-        assert_eq!(a.compare(&b), (1, 0, false));
-        assert_eq!(b.compare(&a), (1, 0, false));
+        assert!(a.compare(&b) == CompareResult::Diff { hit: 1, blow: 0 });
+        assert!(b.compare(&a) == CompareResult::Diff { hit: 1, blow: 0 });
 
         let c = Digits::new([4, 2, 7, 3]).unwrap();
-        assert_eq!(a.compare(&c), (1, 2, false));
+        assert!(a.compare(&c) == CompareResult::Diff { hit: 1, blow: 2 });
     }
 
     #[test]
     fn 全部あたり() {
         let a = Digits::new([1, 2, 3, 4]).unwrap();
         let b = Digits::new([1, 2, 3, 4]).unwrap();
-        assert_eq!(a.compare(&b), (4, 0, true));
-        assert_eq!(b.compare(&a), (4, 0, true));
+        assert!(a.compare(&b) == CompareResult::Same);
+        assert!(b.compare(&a) == CompareResult::Same);
     }
 }
