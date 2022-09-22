@@ -19,10 +19,8 @@ fn input() -> Digits {
 
 fn main() {
     let ans = Digits::generate_random();
-    let mut turn: u32 = 0;
 
-    loop {
-        turn += 1;
+    for turn in 1..10 {
         println!("turn: {}", turn);
         let my_digits: Digits = input();
 
@@ -36,4 +34,6 @@ fn main() {
             }
         }
     }
+
+    println!("game over! the answer is {}", ans);
 }
